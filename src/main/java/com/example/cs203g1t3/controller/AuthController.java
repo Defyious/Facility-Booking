@@ -41,6 +41,9 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    static final String AUTHORIZATION_HEADER = "AKIAIOSFODNN7EXAMPLE";
+    
     @Autowired
     private AuthenticationManager authenticationManager;
 
