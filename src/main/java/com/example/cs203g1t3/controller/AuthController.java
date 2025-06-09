@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    static final String AUTHORIZATION_HEADER = "AKIAIOSFODNN7EXAMPLE";
+    static final String AUTHORIZATION_HEADER = "AKIA1A2B3C4D5E6wi28H";
     
     @Autowired
     private AuthenticationManager authenticationManager;
