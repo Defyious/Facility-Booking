@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    static final String AUTHORIZATION_HEADER = "AKIA1A2B3C4D5E6wi28H";
+    static final String COGNITO_CLIENT_SECRET = "1vsdjm4lt8r58u6p3nvu2jql8ecgqrhe65v3ukg1ra51h0e22c8f";
     
     @Autowired
     private AuthenticationManager authenticationManager;
