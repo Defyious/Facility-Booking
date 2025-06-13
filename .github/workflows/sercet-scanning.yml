@@ -1,21 +1,15 @@
-name: Secret Scanning Gate
+name: Secret Scanning Mock Check
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   check-secrets:
     runs-on: ubuntu-latest
     steps:
-      - name: Check for open secret scanning alerts
-        id: scan
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-          REPO: ${{ github.repository }}
+      - name: Simulate secret scanning response
         run: |
-          echo "🔍 Calling GitHub Secret Scanning Alerts API for $REPO..."
+          echo "🔍 Using mock GitHub secret scanning response..."
 
           # Simulated response (real use would be a curl call)
           response='[
@@ -30,21 +24,16 @@ jobs:
             }
           ]'
 
-          echo "📦 Raw API Response:"
-          cat "$api_response"
-          echo ""
+          echo "📦 Raw API response:"
+          echo "$response" | jq .
 
-          # Fail if status code is not 200
-          if [ "$status_code" -ne 200 ]; then
-            echo "❌ API call failed with status code $status_code"
-            exit 1
-          fi
+          # Count open alerts
+          count=$(echo "$response" | jq '[.[] | select(.state == "open")] | length')
 
-          # Count and handle open secrets
-          open_count=$(jq 'length' < "$api_response")
-          if [ "$open_count" -gt 0 ]; then
-            echo "❌ $open_count open secret scanning alerts found. Failing the workflow."
+          if [ "$count" -gt 0 ]; then
+            echo "❌ $count open secret scanning alerts found:"
+            echo "$response" | jq -r '.[] | select(.state == "open") | "- Type: \(.secret_type_display_name)\n  URL: \(.html_url)\n  Created: \(.created_at)"'
             exit 1
           else
-            echo "✅ No open secrets found."
+            echo "✅ No open alerts found."
           fi
