@@ -20,6 +20,10 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/$REPO/secret-scanning/alerts?state=open")
 
+          echo "📦 Raw API Response:"
+          cat "$api_response"
+          echo ""
+
           open_count=$(echo "$alerts" | jq 'length')
 
           echo "Found $open_count open secret alerts."
