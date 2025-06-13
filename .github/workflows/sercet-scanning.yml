@@ -22,10 +22,9 @@ jobs:
 
           open_count=$(echo "$alerts" | jq 'length')
 
-          echo "Found $open_count open secret alerts."
-
           if [ "$open_count" -gt 0 ]; then
-            echo "❌ Open secrets found. Failing workflow."
+            echo "❌ Found $open_count open secret scanning alerts:"
+            echo "$alerts" | jq -r '.[].html_url'
             exit 1
           else
             echo "✅ No open secrets found."
