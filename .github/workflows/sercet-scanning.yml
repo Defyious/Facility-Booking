@@ -14,9 +14,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-        run: |
-          echo "Checking for open secret scanning alerts in $REPO..."
-          alerts=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+         run: |
+          echo "🔍 Calling GitHub Secret Scanning Alerts API for $REPO..."
+
+          # Make API call and capture both response body and HTTP status
+          api_response=$(mktemp)
+          status_code=$(curl -s -w "%{http_code}" -o "$api_response" \
+            -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/$REPO/secret-scanning/alerts?state=open")
 
@@ -24,12 +28,16 @@ jobs:
           cat "$api_response"
           echo ""
 
-          open_count=$(echo "$alerts" | jq 'length')
+          # Fail if status code is not 200
+          if [ "$status_code" -ne 200 ]; then
+            echo "❌ API call failed with status code $status_code"
+            exit 1
+          fi
 
-          echo "Found $open_count open secret alerts."
-
+          # Count and handle open secrets
+          open_count=$(jq 'length' < "$api_response")
           if [ "$open_count" -gt 0 ]; then
-            echo "❌ Open secrets found. Failing workflow."
+            echo "❌ $open_count open secret scanning alerts found. Failing the workflow."
             exit 1
           else
             echo "✅ No open secrets found."
