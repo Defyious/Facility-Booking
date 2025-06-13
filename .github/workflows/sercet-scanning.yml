@@ -14,7 +14,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-         run: |
+        run: |
           echo "🔍 Calling GitHub Secret Scanning Alerts API for $REPO..."
 
           # Make API call and capture both response body and HTTP status
