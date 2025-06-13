@@ -12,7 +12,7 @@ jobs:
       - name: Check for open secret scanning alerts
         id: scan
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           REPO: ${{ github.repository }}
         run: |
           echo "Calling GitHub Secret Scanning Alerts API for $REPO..."
