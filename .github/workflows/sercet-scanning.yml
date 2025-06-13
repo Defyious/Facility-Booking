@@ -9,34 +9,35 @@ jobs:
   check-secrets:
     runs-on: ubuntu-latest
     steps:
-      - name: Check for open secret scanning alerts
-        id: scan
+      - name: Call Secret Scanning API and validate
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GH_TOKEN: ${{ secrets.GH_PAT }} 
           REPO: ${{ github.repository }}
         run: |
-          echo "${{ github.repository }}"
-          echo "Calling GitHub Secret Scanning Alerts API for $REPO..."
+          echo "🔍 Calling GitHub Secret Scanning Alerts API for $REPO..."
 
-          response=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
-                          -H "Accept: application/vnd.github+json" \
-                          "https://api.github.com/repos/$REPO/secret-scanning/alerts?state=open")
+          # Make API call and capture both response body and HTTP status
+          api_response=$(mktemp)
+          status_code=$(curl -s -w "%{http_code}" -o "$api_response" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/secret-scanning/alerts?state=open")
 
-          echo "🔍 Raw API response:"
-          echo "$response"
+          echo "📦 Raw API Response:"
+          cat "$api_response"
+          echo ""
 
-          # Try to parse and count the number of alerts
-          count=$(echo "$response" | jq 'length' 2>/dev/null)
-
-          # Check if jq failed (invalid JSON)
-          if [ -z "$count" ]; then
-            echo "❌ Failed to parse API response. Invalid JSON?"
+          # Fail if status code is not 200
+          if [ "$status_code" -ne 200 ]; then
+            echo "❌ API call failed with status code $status_code"
             exit 1
           fi
 
-          if [ "$count" -gt 0 ]; then
-            echo "❌ $count open secret scanning alerts found. Failing the workflow."
+          # Count and handle open secrets
+          open_count=$(jq 'length' < "$api_response")
+          if [ "$open_count" -gt 0 ]; then
+            echo "❌ $open_count open secret scanning alerts found. Failing the workflow."
             exit 1
           else
-            echo "✅ No open secret scanning alerts."
+            echo "✅ No open secrets found."
           fi
