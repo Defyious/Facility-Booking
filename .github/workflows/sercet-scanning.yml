@@ -12,20 +12,30 @@ jobs:
       - name: Check for open secret scanning alerts
         id: scan
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Or use GH_PAT for private repos
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          echo "Checking for open secret scanning alerts in $REPO..."
-          alerts=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$REPO/secret-scanning/alerts?state=open")
+          echo "Calling GitHub Secret Scanning Alerts API for $REPO..."
 
-          open_count=$(echo "$alerts" | jq 'length')
+          response=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+                          -H "Accept: application/vnd.github+json" \
+                          "https://api.github.com/repos/$REPO/secret-scanning/alerts?state=open")
 
-          if [ "$open_count" -gt 0 ]; then
-            echo "❌ Found $open_count open secret scanning alerts:"
-            echo "$alerts" | jq -r '.[].html_url'
+          echo "🔍 Raw API response:"
+          echo "$response"
+
+          # Try to parse and count the number of alerts
+          count=$(echo "$response" | jq 'length' 2>/dev/null)
+
+          # Check if jq failed (invalid JSON)
+          if [ -z "$count" ]; then
+            echo "❌ Failed to parse API response. Invalid JSON?"
+            exit 1
+          fi
+
+          if [ "$count" -gt 0 ]; then
+            echo "❌ $count open secret scanning alerts found. Failing the workflow."
             exit 1
           else
-            echo "✅ No open secrets found."
+            echo "✅ No open secret scanning alerts."
           fi
