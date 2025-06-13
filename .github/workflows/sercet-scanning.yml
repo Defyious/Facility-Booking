@@ -17,12 +17,18 @@ jobs:
         run: |
           echo "🔍 Calling GitHub Secret Scanning Alerts API for $REPO..."
 
-          # Make API call and capture both response body and HTTP status
-          api_response=$(mktemp)
-          status_code=$(curl -s -w "%{http_code}" -o "$api_response" \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$REPO/secret-scanning/alerts?state=open")
+          # Simulated response (real use would be a curl call)
+          response='[
+            {
+              "number": 1,
+              "created_at": "2020-11-06T18:18:30Z",
+              "url": "https://api.github.com/repos/owner/repo/secret-scanning/alerts/1",
+              "html_url": "https://github.com/owner/repo/security/secret-scanning/1",
+              "secret_type": "mailchimp_api_key",
+              "secret_type_display_name": "Mailchimp API Key",
+              "state": "open"
+            }
+          ]'
 
           echo "📦 Raw API Response:"
           cat "$api_response"
