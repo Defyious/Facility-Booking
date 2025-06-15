@@ -11,11 +11,9 @@ jobs:
     steps:
       - name: Call Secret Scanning API and validate
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Now using GITHUB_TOKEN
+          GH_TOKEN: ${{ secrets.GH_PAT }} 
           REPO: ${{ github.repository }}
         run: |
-          echo "🔐 GITHUB_TOKEN (for debug only):"
-          echo "$GH_TOKEN"
           echo "🔍 Calling GitHub Secret Scanning Alerts API for $REPO..."
 
           # Make API call and capture both response body and HTTP status
@@ -29,11 +27,13 @@ jobs:
           cat "$api_response"
           echo ""
 
+          # Fail if status code is not 200
           if [ "$status_code" -ne 200 ]; then
             echo "❌ API call failed with status code $status_code"
             exit 1
           fi
 
+          # Count and handle open secrets
           open_count=$(jq 'length' < "$api_response")
           if [ "$open_count" -gt 0 ]; then
             echo "❌ $open_count open secret scanning alerts found. Failing the workflow."
